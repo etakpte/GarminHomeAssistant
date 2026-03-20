@@ -245,6 +245,13 @@ class Settings {
         Properties.setValue("clear_cache", mClearCache);
     }
 
+        //! Unset the clear cache Boolean option supplied as part of the Settings.
+    //
+    static function setClearCache() {
+        mClearCache = true;
+        Properties.setValue("clear_cache", mClearCache);
+    }
+
     //! Get the menu check Boolean option supplied as part of the Settings.
     //!
     //! @return Boolean for whether the menu should be checked for updates when

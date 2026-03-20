@@ -8,3 +8,4 @@ source/ClientId.mc
 # Gemini API key for automated translations
 gemini_api_key.txt
 developer_key
+source/Settings.mc

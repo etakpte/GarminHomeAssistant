@@ -21,7 +21,7 @@ rem
 rem -----------------------------------------------------------------------------------
 
 rem Check this path is correct for your Java installation
-set JAVA_PATH=C:\Program Files\Java\jdk-22\bin
+set JAVA_PATH=c:\Program Files\Zulu\zulu-25\bin
 rem SDK_PATH should work for all users
 set /p SDK_PATH=<"%USERPROFILE%\AppData\Roaming\Garmin\ConnectIQ\current-sdk.cfg"
 set SDK_PATH=%SDK_PATH:~0,-1%\bin
@@ -29,7 +29,7 @@ rem Assume we can create and use this directory
 set DEST=bin
 
 rem Device for simulation
-set DEVICE=venu2
+set DEVICE=venu445mm
 set JUNGLE=monkey.jungle
 
 rem C:\>java -jar %SDK_PATH%\monkeybrains.jar -h

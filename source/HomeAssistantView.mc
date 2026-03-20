@@ -32,6 +32,7 @@ class HomeAssistantView extends WatchUi.Menu2 {
             :icon  as Graphics.BitmapType or WatchUi.Drawable or Lang.Symbol
         }?
     ) {
+        var menuItem = null as WatchUi.MenuItem;
         if (options == null) {
             options = { :title => definition.get("title") as Lang.String };
         } else {
@@ -77,7 +78,7 @@ class HomeAssistantView extends WatchUi.Menu2 {
                 }
                 if (type != null && name != null && enabled) {
                     if (type.equals("toggle") && entity != null) {
-                        addItem(HomeAssistantMenuItemFactory.create().toggle(
+                        menuItem = HomeAssistantMenuItemFactory.create().toggle(
                             name,
                             entity,
                             content,
@@ -86,9 +87,10 @@ class HomeAssistantView extends WatchUi.Menu2 {
                                 :confirm => confirm,
                                 :pin     => pin
                             }
-                        ));
+                        );
+                        addItem(menuItem);
                     } else if (type.equals("tap") && action != null) {
-                        addItem(HomeAssistantMenuItemFactory.create().tap(
+                        menuItem = HomeAssistantMenuItemFactory.create().tap(
                             name,
                             entity,
                             content,
@@ -99,13 +101,14 @@ class HomeAssistantView extends WatchUi.Menu2 {
                                 :confirm => confirm,
                                 :pin     => pin
                             }
-                        ));
+                        );
+                        addItem(menuItem);
                     } else if (type.equals("template") && content != null) {
                         // NB. "template" is deprecated in the schema and remains only for backward compatibility. All menu items can now use templates, so the replacement is "info".
                         // The exit option is dependent on the type of template.
                         if (tap_action == null) {
                             // No exit from an information only item
-                            addItem(HomeAssistantMenuItemFactory.create().tap(
+                            menuItem = HomeAssistantMenuItemFactory.create().tap(
                                 name,
                                 entity,
                                 content,
@@ -116,10 +119,11 @@ class HomeAssistantView extends WatchUi.Menu2 {
                                     :confirm => confirm,
                                     :pin     => pin
                                 }
-                            ));
+                            );
+                            addItem(menuItem);
                         } else {
                             // You may exit from template item with a 'tap_action'.
-                            addItem(HomeAssistantMenuItemFactory.create().tap(
+                            menuItem = HomeAssistantMenuItemFactory.create().tap(
                                 name,
                                 entity,
                                 content,
@@ -130,13 +134,14 @@ class HomeAssistantView extends WatchUi.Menu2 {
                                     :confirm => confirm,
                                     :pin     => pin
                                 }
-                            ));
+                            );
+                            addItem(menuItem);
                         }
                     } else if (type.equals("numeric") && action != null) {
                         if (tap_action != null) {
                             var picker = tap_action.get("picker") as Lang.Dictionary?;
                             if (picker != null) {
-                                addItem(HomeAssistantMenuItemFactory.create().numeric(
+                                menuItem = HomeAssistantMenuItemFactory.create().numeric(
                                     name,
                                     entity,
                                     content,
@@ -147,12 +152,13 @@ class HomeAssistantView extends WatchUi.Menu2 {
                                         :confirm => confirm,
                                         :pin     => pin
                                     }
-                                ));
+                                );
+                                addItem(menuItem);
                             }
                         }
                     } else if (type.equals("info") && content != null) {
                         // Cannot exit from a non-actionable information only menu item.
-                        addItem(HomeAssistantMenuItemFactory.create().tap(
+                        menuItem = HomeAssistantMenuItemFactory.create().tap(
                             name,
                             entity,
                             content,
@@ -163,10 +169,25 @@ class HomeAssistantView extends WatchUi.Menu2 {
                                 :confirm => confirm,
                                 :pin     => pin
                             }
-                        ));
+                        );
+                        addItem(menuItem);
                     } else if (type.equals("group")) {
-                        addItem(HomeAssistantMenuItemFactory.create().group(items[i], content));
+                        menuItem = HomeAssistantMenuItemFactory.create().group(items[i], content);
+                        addItem(menuItem);
                     }
+                }
+                //System.println(items[i] + " " + name + " " + quickfire);
+                if (items[i].get("quickfire") == true && !Application.getApp().mlaunchedFromGlance) {
+                    System.println("QF" + items[i] + " " + name + " menuItem:" + menuItem.getLabel() + "IsAPP:" + Application.getApp().getIsApp());
+                        if (menuItem instanceof HomeAssistantToggleMenuItem) {
+                            var t = menuItem as HomeAssistantToggleMenuItem;
+                            t.callAction(true);
+                            System.println("QF Toggle menuItem");
+                        } else if (menuItem instanceof HomeAssistantTapMenuItem) {
+                            var t = menuItem as HomeAssistantTapMenuItem;
+                             t.callAction();
+                             System.println("QF TAP menuItem");
+                        }
                 }
             }
         }
@@ -269,6 +290,7 @@ class HomeAssistantViewDelegate extends WatchUi.Menu2InputDelegate {
     //! @param item Selected menu item.
     //
     function onSelect(item as WatchUi.MenuItem) as Void {
+        System.println("onSelect triggered: " + item);
         mTimer.reset();
         if (item instanceof HomeAssistantToggleMenuItem) {
             var haToggleItem = item as HomeAssistantToggleMenuItem;
@@ -276,8 +298,15 @@ class HomeAssistantViewDelegate extends WatchUi.Menu2InputDelegate {
             haToggleItem.callAction(haToggleItem.isEnabled());
         } else if (item instanceof HomeAssistantTapMenuItem) {
             var haItem = item as HomeAssistantTapMenuItem;
-            // System.println(haItem.getLabel() + " " + haItem.getId());
-            haItem.callAction();
+            System.println(haItem.getLabel() + " " + haItem.getId());
+            if (haItem.getLabel().equals("ClearCache")) {
+                // If the tap item has a template, we need to update the content before calling the action, as the template may include dynamic information.
+                System.println("Clearing Cache...");
+                Settings.setClearCache();
+            }
+            else {
+                haItem.callAction();
+            }
         } else if (item instanceof HomeAssistantNumericMenuItem) {
             var haItem = item as HomeAssistantNumericMenuItem;
             // System.println(haItem.getLabel() + " " + haItem.getId());

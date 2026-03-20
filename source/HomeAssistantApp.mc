@@ -45,7 +45,7 @@ class HomeAssistantApp extends Application.AppBase {
     private var mTemplates      as Lang.Dictionary? = null;  // Cache of compiled templates
     private var mNotifiedNoBle  as Lang.Boolean     = false;
     private var mIsCacheChecked as Lang.Boolean     = false;
-
+    public  var mlaunchedFromGlance       as Lang.Boolean = false;
     //! Class Constructor
     // 
     function initialize() {
@@ -68,6 +68,10 @@ class HomeAssistantApp extends Application.AppBase {
     //! @param state see `AppBase.onStart()`
     //
     function onStart(state as Lang.Dictionary?) as Void {
+        if (state != null) {
+            mlaunchedFromGlance = (state != null) ? state.get(:launchedFromGlance) : false;
+            System.println("State launchedFromGlance: "+ mlaunchedFromGlance);
+        }
         AppBase.onStart(state);
         // ATTENTION when adding stuff into this block:
         // Because of the >>GlanceView<<, it should contain only
@@ -260,20 +264,20 @@ class HomeAssistantApp extends Application.AppBase {
     //!         the menu when not in the cache is asynchronous and affects how the views are managed.
     //
     function fetchMenuConfig() as Lang.Boolean {
-        // System.println("Menu URL = " + Settings.getConfigUrl());
+         System.println("Menu URL = " + Settings.getConfigUrl());
         if (Settings.getConfigUrl().equals("")) {
             WatchUi.requestUpdate();
         } else {
             var menu = Storage.getValue(scStorageKeyMenu) as Lang.Dictionary;
             if (menu != null and (Settings.getClearCache() || !Settings.getCacheConfig())) {
-                // System.println("HomeAssistantApp fetchMenuConfig(): Clearing cached menu on user request.");
+                System.println("HomeAssistantApp fetchMenuConfig(): Clearing cached menu on user request.");
                 Storage.deleteValue(scStorageKeyMenu);
                 Storage.deleteValue(scStorageKeyGlance);
                 menu = null;
                 Settings.unsetClearCache();
             }
             if (menu == null) {
-                // System.println("HomeAssistantApp fetchMenuConfig(): Menu not cached, fetching.");
+                System.println("HomeAssistantApp fetchMenuConfig(): Menu not cached, fetching.");
                 fetchMenuConfigBasic(method(:onReturnFetchMenuConfig));
             } else {
                 WatchUi.requestUpdate();
